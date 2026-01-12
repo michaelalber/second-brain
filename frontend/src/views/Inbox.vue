@@ -9,7 +9,21 @@ const { notes, loading, error } = storeToRefs(notesStore)
 
 const newTitle = ref('')
 const newContent = ref('')
+const sourceUrl = ref('')
+const sourceType = ref('')
+const showAdvanced = ref(false)
 const isCapturing = ref(false)
+
+const sourceTypes = [
+  { value: '', label: 'Select type...' },
+  { value: 'article', label: 'Article' },
+  { value: 'book', label: 'Book' },
+  { value: 'podcast', label: 'Podcast' },
+  { value: 'video', label: 'Video' },
+  { value: 'thought', label: 'Thought' },
+  { value: 'meeting', label: 'Meeting' },
+  { value: 'conversation', label: 'Conversation' },
+]
 
 onMounted(() => {
   notesStore.fetchInbox()
@@ -23,9 +37,15 @@ async function handleCapture() {
     await notesStore.quickCapture({
       title: newTitle.value.trim(),
       content: newContent.value.trim(),
+      source_url: sourceUrl.value.trim() || undefined,
+      source_type: sourceType.value || undefined,
     })
+    // Reset form
     newTitle.value = ''
     newContent.value = ''
+    sourceUrl.value = ''
+    sourceType.value = ''
+    showAdvanced.value = false
   } finally {
     isCapturing.value = false
   }
@@ -59,6 +79,41 @@ async function handleCapture() {
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
           ></textarea>
         </div>
+
+        <!-- Advanced Options Toggle -->
+        <button
+          type="button"
+          @click="showAdvanced = !showAdvanced"
+          class="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+        >
+          <span>{{ showAdvanced ? '−' : '+' }}</span>
+          <span>{{ showAdvanced ? 'Hide' : 'Show' }} source options</span>
+        </button>
+
+        <!-- Advanced Options -->
+        <div v-if="showAdvanced" class="space-y-3 p-3 bg-gray-50 rounded-lg">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Source URL</label>
+            <input
+              v-model="sourceUrl"
+              type="url"
+              placeholder="https://..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Source Type</label>
+            <select
+              v-model="sourceType"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option v-for="st in sourceTypes" :key="st.value" :value="st.value">
+                {{ st.label }}
+              </option>
+            </select>
+          </div>
+        </div>
+
         <button
           type="submit"
           :disabled="isCapturing || !newTitle.trim() || !newContent.trim()"

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useNotesStore } from '@/stores/notes'
 import { useContainersStore } from '@/stores/containers'
+import MoveNoteModal from '@/components/MoveNoteModal.vue'
 
 const props = defineProps<{
   id: string
@@ -16,6 +17,13 @@ const containersStore = useContainersStore()
 const { currentNote, loading, error } = storeToRefs(notesStore)
 const { containers } = storeToRefs(containersStore)
 
+// Edit mode state
+const isEditing = ref(false)
+const editTitle = ref('')
+const editContent = ref('')
+const isSaving = ref(false)
+const showMoveModal = ref(false)
+
 const stageColors = {
   capture: 'bg-yellow-100 text-yellow-800',
   organize: 'bg-blue-100 text-blue-800',
@@ -23,21 +31,74 @@ const stageColors = {
   express: 'bg-green-100 text-green-800',
 }
 
+const hasChanges = computed(() => {
+  if (!currentNote.value) return false
+  return (
+    editTitle.value !== currentNote.value.title ||
+    editContent.value !== currentNote.value.content
+  )
+})
+
 onMounted(() => {
   notesStore.fetchNote(props.id)
   containersStore.fetchContainers()
+  document.addEventListener('keydown', handleNoteKeyDown)
 })
 
 watch(
   () => props.id,
   (newId) => {
     notesStore.fetchNote(newId)
+    isEditing.value = false
   }
 )
 
-async function handleMove(containerId: string) {
-  await notesStore.moveToContainer(props.id, containerId)
+watch(currentNote, (note) => {
+  if (note) {
+    editTitle.value = note.title
+    editContent.value = note.content
+  }
+})
+
+function startEditing() {
+  if (currentNote.value) {
+    editTitle.value = currentNote.value.title
+    editContent.value = currentNote.value.content
+    isEditing.value = true
+  }
 }
+
+function cancelEditing() {
+  if (currentNote.value) {
+    editTitle.value = currentNote.value.title
+    editContent.value = currentNote.value.content
+  }
+  isEditing.value = false
+}
+
+async function saveChanges() {
+  if (!hasChanges.value) {
+    isEditing.value = false
+    return
+  }
+
+  isSaving.value = true
+  try {
+    await notesStore.updateNote(props.id, {
+      title: editTitle.value,
+      content: editContent.value,
+    })
+    isEditing.value = false
+  } finally {
+    isSaving.value = false
+  }
+}
+
+const currentContainerName = computed(() => {
+  if (!currentNote.value?.container_id) return 'Inbox'
+  const container = containers.value.find(c => c.id === currentNote.value!.container_id)
+  return container ? `${container.type.toUpperCase()}: ${container.name}` : 'Unknown'
+})
 
 async function handleDelete() {
   if (confirm('Are you sure you want to delete this note?')) {
@@ -55,6 +116,67 @@ function formatDate(dateStr: string): string {
     minute: '2-digit',
   })
 }
+
+// Keyboard shortcuts for note editing
+function isInputElement(element: EventTarget | null): boolean {
+  if (!element) return false
+  const tagName = (element as HTMLElement).tagName?.toLowerCase()
+  return (
+    tagName === 'input' ||
+    tagName === 'textarea' ||
+    tagName === 'select' ||
+    (element as HTMLElement).isContentEditable
+  )
+}
+
+function handleNoteKeyDown(event: KeyboardEvent) {
+  // Ctrl/Cmd + Enter to save
+  if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && isEditing.value) {
+    event.preventDefault()
+    saveChanges()
+    return
+  }
+
+  // Escape to cancel editing or close modal
+  if (event.key === 'Escape') {
+    if (showMoveModal.value) {
+      showMoveModal.value = false
+      return
+    }
+    if (isEditing.value) {
+      cancelEditing()
+      return
+    }
+  }
+
+  // Don't trigger shortcuts when typing
+  if (isInputElement(event.target)) return
+
+  // 'e' to start editing
+  if (event.key === 'e' && !isEditing.value && currentNote.value) {
+    event.preventDefault()
+    startEditing()
+    return
+  }
+
+  // 'm' to open move modal
+  if (event.key === 'm' && !isEditing.value && currentNote.value) {
+    event.preventDefault()
+    showMoveModal.value = true
+    return
+  }
+
+  // 'd' to delete (with confirmation)
+  if (event.key === 'd' && !isEditing.value && currentNote.value) {
+    event.preventDefault()
+    handleDelete()
+    return
+  }
+}
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleNoteKeyDown)
+})
 </script>
 
 <template>
@@ -64,14 +186,24 @@ function formatDate(dateStr: string): string {
     <div v-else-if="error" class="text-red-500">{{ error }}</div>
 
     <template v-else-if="currentNote">
+      <!-- Header -->
       <header class="mb-6">
         <div class="flex items-start justify-between gap-4 mb-4">
-          <h1 class="text-2xl font-bold text-gray-900">
-            {{ currentNote.title }}
-          </h1>
+          <!-- Title (editable or display) -->
+          <div class="flex-1">
+            <input
+              v-if="isEditing"
+              v-model="editTitle"
+              type="text"
+              class="w-full text-2xl font-bold text-gray-900 px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <h1 v-else class="text-2xl font-bold text-gray-900">
+              {{ currentNote.title }}
+            </h1>
+          </div>
           <span
             :class="[
-              'px-3 py-1 text-sm font-medium rounded-full',
+              'px-3 py-1 text-sm font-medium rounded-full shrink-0',
               stageColors[currentNote.code_stage],
             ]"
           >
@@ -95,10 +227,43 @@ function formatDate(dateStr: string): string {
         </div>
       </header>
 
-      <!-- Content -->
-      <article class="prose max-w-none mb-8 p-6 bg-white rounded-lg border border-gray-200">
-        <p class="whitespace-pre-wrap">{{ currentNote.content }}</p>
+      <!-- Content (editable or display) -->
+      <article class="mb-8 p-6 bg-white rounded-lg border border-gray-200">
+        <textarea
+          v-if="isEditing"
+          v-model="editContent"
+          rows="12"
+          class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y font-mono"
+        ></textarea>
+        <p v-else class="whitespace-pre-wrap">{{ currentNote.content }}</p>
       </article>
+
+      <!-- Edit Actions -->
+      <div class="mb-8 flex gap-2">
+        <template v-if="isEditing">
+          <button
+            @click="saveChanges"
+            :disabled="isSaving || !hasChanges"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            {{ isSaving ? 'Saving...' : 'Save Changes' }}
+          </button>
+          <button
+            @click="cancelEditing"
+            :disabled="isSaving"
+            class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+          >
+            Cancel
+          </button>
+        </template>
+        <button
+          v-else
+          @click="startEditing"
+          class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+        >
+          Edit Note
+        </button>
+      </div>
 
       <!-- Executive Summary -->
       <section
@@ -118,22 +283,17 @@ function formatDate(dateStr: string): string {
         <!-- Move to Container -->
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Move to Container
+            Location
           </label>
-          <select
-            :value="currentNote.container_id || ''"
-            @change="(e) => handleMove((e.target as HTMLSelectElement).value)"
-            class="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">No container (Inbox)</option>
-            <option
-              v-for="container in containers"
-              :key="container.id"
-              :value="container.id"
+          <div class="flex items-center gap-3">
+            <span class="text-gray-900">{{ currentContainerName }}</span>
+            <button
+              @click="showMoveModal = true"
+              class="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
             >
-              {{ container.type.toUpperCase() }}: {{ container.name }}
-            </option>
-          </select>
+              Move
+            </button>
+          </div>
         </div>
 
         <!-- Delete -->
@@ -144,6 +304,15 @@ function formatDate(dateStr: string): string {
           Delete Note
         </button>
       </section>
+
+      <!-- Move Note Modal -->
+      <MoveNoteModal
+        v-if="showMoveModal"
+        :note-id="props.id"
+        :current-container-id="currentNote.container_id"
+        @close="showMoveModal = false"
+        @moved="notesStore.fetchNote(props.id)"
+      />
     </template>
   </div>
 </template>

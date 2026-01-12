@@ -63,14 +63,20 @@ class NoteService:
         return note
 
     async def move_to_container(
-        self, note_id: UUID, container_id: UUID
+        self, note_id: UUID, container_id: UUID | None
     ) -> Note | None:
         note = await self.get_note(note_id)
         if not note:
             return None
 
         note.container_id = container_id
-        if note.code_stage == CodeStage.CAPTURE:
+
+        # Update code_stage based on destination
+        if container_id is None:
+            # Moving to inbox - set to capture
+            note.code_stage = CodeStage.CAPTURE
+        elif note.code_stage == CodeStage.CAPTURE:
+            # Moving from inbox to container - set to organize
             note.code_stage = CodeStage.ORGANIZE
 
         await self.db.commit()

@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useContainersStore } from '@/stores/containers'
 import { storeToRefs } from 'pinia'
+import CreateContainerModal from './CreateContainerModal.vue'
 
 const containersStore = useContainersStore()
 const { projects, areas, resources, archives, loading } = storeToRefs(containersStore)
+
+const showCreateModal = ref(false)
 
 onMounted(() => {
   containersStore.fetchContainers()
@@ -12,7 +15,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <aside class="w-64 bg-gray-100 h-screen p-4 overflow-y-auto">
+  <aside class="w-64 bg-gray-100 h-screen p-4 overflow-y-auto flex flex-col">
     <div class="mb-6">
       <router-link
         to="/"
@@ -22,7 +25,7 @@ onMounted(() => {
       </router-link>
     </div>
 
-    <nav class="space-y-6">
+    <nav class="space-y-6 flex-1">
       <!-- Quick Actions -->
       <div>
         <router-link
@@ -119,5 +122,22 @@ onMounted(() => {
         </div>
       </template>
     </nav>
+
+    <!-- Create Container Button -->
+    <div class="pt-4 border-t border-gray-200">
+      <button
+        @click="showCreateModal = true"
+        class="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-200 rounded-lg"
+      >
+        <span>+</span>
+        <span>New Container</span>
+      </button>
+    </div>
+
+    <!-- Create Container Modal -->
+    <CreateContainerModal
+      v-if="showCreateModal"
+      @close="showCreateModal = false"
+    />
   </aside>
 </template>

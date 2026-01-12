@@ -27,7 +27,7 @@ class NoteUpdate(BaseModel):
 
 
 class NoteMoveRequest(BaseModel):
-    container_id: UUID
+    container_id: UUID | None = None
 
 
 class HighlightRange(BaseModel):

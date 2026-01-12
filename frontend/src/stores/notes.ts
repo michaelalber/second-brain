@@ -119,7 +119,7 @@ export const useNotesStore = defineStore('notes', () => {
     }
   }
 
-  async function moveToContainer(noteId: string, containerId: string) {
+  async function moveToContainer(noteId: string, containerId: string | null) {
     loading.value = true
     error.value = null
     try {

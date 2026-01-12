@@ -45,7 +45,7 @@ export interface NoteUpdate {
 }
 
 export interface NoteMoveRequest {
-  container_id: string
+  container_id: string | null
 }
 
 export interface NoteHighlightsUpdate {
