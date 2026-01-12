@@ -380,3 +380,4 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,linux,macos,jetbrains,visualstudiocode,python
+basb.db
