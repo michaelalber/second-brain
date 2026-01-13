@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 from app.models.note import CodeStage, Note
-from app.schemas.note import NoteCreate, NoteUpdate, NoteHighlightsUpdate, HighlightRange
+from app.schemas.note import NoteUpdate, NoteHighlightsUpdate, HighlightRange
 from app.services.note_service import NoteService
 
 
