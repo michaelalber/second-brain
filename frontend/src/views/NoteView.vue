@@ -5,6 +5,8 @@ import { storeToRefs } from 'pinia'
 import { useNotesStore } from '@/stores/notes'
 import { useContainersStore } from '@/stores/containers'
 import MoveNoteModal from '@/components/MoveNoteModal.vue'
+import RichEditor from '@/components/RichEditor.vue'
+import ExecutiveSummary from '@/components/ExecutiveSummary.vue'
 
 const props = defineProps<{
   id: string
@@ -21,6 +23,8 @@ const { containers } = storeToRefs(containersStore)
 const isEditing = ref(false)
 const editTitle = ref('')
 const editContent = ref('')
+const editContentHtml = ref('')
+const editExecutiveSummary = ref('')
 const isSaving = ref(false)
 const showMoveModal = ref(false)
 
@@ -35,9 +39,11 @@ const hasChanges = computed(() => {
   if (!currentNote.value) return false
   return (
     editTitle.value !== currentNote.value.title ||
-    editContent.value !== currentNote.value.content
+    editContentHtml.value !== (currentNote.value.content_html || currentNote.value.content) ||
+    editExecutiveSummary.value !== (currentNote.value.executive_summary || '')
   )
 })
+
 
 onMounted(() => {
   notesStore.fetchNote(props.id)
@@ -57,6 +63,8 @@ watch(currentNote, (note) => {
   if (note) {
     editTitle.value = note.title
     editContent.value = note.content
+    editContentHtml.value = note.content_html || note.content
+    editExecutiveSummary.value = note.executive_summary || ''
   }
 })
 
@@ -64,6 +72,8 @@ function startEditing() {
   if (currentNote.value) {
     editTitle.value = currentNote.value.title
     editContent.value = currentNote.value.content
+    editContentHtml.value = currentNote.value.content_html || currentNote.value.content
+    editExecutiveSummary.value = currentNote.value.executive_summary || ''
     isEditing.value = true
   }
 }
@@ -72,8 +82,17 @@ function cancelEditing() {
   if (currentNote.value) {
     editTitle.value = currentNote.value.title
     editContent.value = currentNote.value.content
+    editContentHtml.value = currentNote.value.content_html || currentNote.value.content
+    editExecutiveSummary.value = currentNote.value.executive_summary || ''
   }
   isEditing.value = false
+}
+
+// Extract plain text from HTML for storage
+function htmlToPlainText(html: string): string {
+  const div = document.createElement('div')
+  div.innerHTML = html
+  return div.textContent || div.innerText || ''
 }
 
 async function saveChanges() {
@@ -84,9 +103,14 @@ async function saveChanges() {
 
   isSaving.value = true
   try {
+    // Extract plain text from HTML for the content field
+    const plainTextContent = htmlToPlainText(editContentHtml.value)
+
     await notesStore.updateNote(props.id, {
       title: editTitle.value,
-      content: editContent.value,
+      content: plainTextContent,
+      content_html: editContentHtml.value,
+      executive_summary: editExecutiveSummary.value || undefined,
     })
     isEditing.value = false
   } finally {
@@ -96,7 +120,7 @@ async function saveChanges() {
 
 const currentContainerName = computed(() => {
   if (!currentNote.value?.container_id) return 'Inbox'
-  const container = containers.value.find(c => c.id === currentNote.value!.container_id)
+  const container = containers.value.find((c) => c.id === currentNote.value!.container_id)
   return container ? `${container.type.toUpperCase()}: ${container.name}` : 'Unknown'
 })
 
@@ -227,16 +251,21 @@ onUnmounted(() => {
         </div>
       </header>
 
-      <!-- Content (editable or display) -->
-      <article class="mb-8 p-6 bg-white rounded-lg border border-gray-200">
-        <textarea
-          v-if="isEditing"
-          v-model="editContent"
-          rows="12"
-          class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y font-mono"
-        ></textarea>
-        <p v-else class="whitespace-pre-wrap">{{ currentNote.content }}</p>
+      <!-- Content - Rich Editor -->
+      <article class="mb-8">
+        <RichEditor
+          v-model="editContentHtml"
+          :readonly="!isEditing"
+          class="bg-white"
+        />
       </article>
+
+      <!-- Executive Summary (L4) -->
+      <ExecutiveSummary
+        v-model="editExecutiveSummary"
+        :readonly="!isEditing"
+        class="mb-8"
+      />
 
       <!-- Edit Actions -->
       <div class="mb-8 flex gap-2">
@@ -265,26 +294,13 @@ onUnmounted(() => {
         </button>
       </div>
 
-      <!-- Executive Summary -->
-      <section
-        v-if="currentNote.executive_summary"
-        class="mb-8 p-4 bg-purple-50 rounded-lg border border-purple-200"
-      >
-        <h2 class="text-lg font-semibold text-purple-800 mb-2">
-          Executive Summary (L4)
-        </h2>
-        <p class="text-purple-900">{{ currentNote.executive_summary }}</p>
-      </section>
-
       <!-- Actions -->
       <section class="p-4 bg-gray-50 rounded-lg border border-gray-200">
         <h2 class="text-lg font-semibold text-gray-800 mb-4">Actions</h2>
 
         <!-- Move to Container -->
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            Location
-          </label>
+          <label class="block text-sm font-medium text-gray-700 mb-2"> Location </label>
           <div class="flex items-center gap-3">
             <span class="text-gray-900">{{ currentContainerName }}</span>
             <button
@@ -309,7 +325,7 @@ onUnmounted(() => {
       <MoveNoteModal
         v-if="showMoveModal"
         :note-id="props.id"
-        :current-container-id="currentNote.container_id"
+        :current-container-id="currentNote.container_id ?? null"
         @close="showMoveModal = false"
         @moved="notesStore.fetchNote(props.id)"
       />
