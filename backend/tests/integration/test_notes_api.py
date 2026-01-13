@@ -156,3 +156,92 @@ async def test_update_highlights(client: AsyncClient):
     assert response.status_code == 200
     assert response.json()["code_stage"] == "distill"
     assert "highlights" in response.json()
+
+
+@pytest.mark.asyncio
+async def test_update_nonexistent_note_returns_404(client: AsyncClient):
+    """Update nonexistent note returns 404."""
+    response = await client.put(
+        "/api/v1/notes/00000000-0000-0000-0000-000000000000",
+        json={"title": "Updated"},
+    )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_move_nonexistent_note_returns_404(client: AsyncClient):
+    """Move nonexistent note returns 404."""
+    response = await client.patch(
+        "/api/v1/notes/00000000-0000-0000-0000-000000000000/move",
+        json={"container_id": None},
+    )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_update_highlights_nonexistent_note_returns_404(client: AsyncClient):
+    """Update highlights on nonexistent note returns 404."""
+    response = await client.patch(
+        "/api/v1/notes/00000000-0000-0000-0000-000000000000/highlights",
+        json={"highlights": [{"start": 0, "end": 10, "layer": 2}]},
+    )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_delete_nonexistent_note_returns_404(client: AsyncClient):
+    """Delete nonexistent note returns 404."""
+    response = await client.delete(
+        "/api/v1/notes/00000000-0000-0000-0000-000000000000"
+    )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_list_notes_with_filters(client: AsyncClient):
+    """List notes with query filters."""
+    # Create a container
+    container_response = await client.post(
+        "/api/v1/containers",
+        json={"name": "Filter Test", "type": "project"},
+    )
+    container_id = container_response.json()["id"]
+
+    # Create notes
+    await client.post(
+        "/api/v1/notes",
+        json={"title": "Apple Note", "content": "About apples"},
+    )
+    note_response = await client.post(
+        "/api/v1/notes",
+        json={"title": "Orange Note", "content": "About oranges"},
+    )
+    note_id = note_response.json()["id"]
+
+    # Move one note to container
+    await client.patch(
+        f"/api/v1/notes/{note_id}/move",
+        json={"container_id": container_id},
+    )
+
+    # Filter by container
+    response = await client.get(f"/api/v1/notes?container_id={container_id}")
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert response.json()[0]["title"] == "Orange Note"
+
+    # Filter by stage
+    response = await client.get("/api/v1/notes?stage=capture")
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert response.json()[0]["title"] == "Apple Note"
+
+    # Filter by query
+    response = await client.get("/api/v1/notes?q=apple")
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert response.json()[0]["title"] == "Apple Note"

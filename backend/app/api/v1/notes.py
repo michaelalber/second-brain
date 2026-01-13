@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, status
 
 from app.api.deps import DbSession
+from app.models.note import Note
 from app.schemas.note import (
     NoteCreate,
     NoteHighlightsUpdate,
@@ -16,7 +17,7 @@ router = APIRouter()
 
 
 @router.post("", response_model=NoteResponse, status_code=status.HTTP_201_CREATED)
-async def create_note(note_in: NoteCreate, db: DbSession) -> NoteResponse:
+async def create_note(note_in: NoteCreate, db: DbSession) -> Note:
     service = NoteService(db)
     return await service.create_note(note_in)
 
@@ -27,13 +28,13 @@ async def list_notes(
     container_id: UUID | None = None,
     stage: str | None = None,
     q: str | None = None,
-) -> list[NoteResponse]:
+) -> list[Note]:
     service = NoteService(db)
     return await service.list_notes(container_id=container_id, stage=stage, q=q)
 
 
 @router.get("/{note_id}", response_model=NoteResponse)
-async def get_note(note_id: UUID, db: DbSession) -> NoteResponse:
+async def get_note(note_id: UUID, db: DbSession) -> Note:
     service = NoteService(db)
     note = await service.get_note(note_id)
     if not note:
@@ -44,7 +45,7 @@ async def get_note(note_id: UUID, db: DbSession) -> NoteResponse:
 @router.put("/{note_id}", response_model=NoteResponse)
 async def update_note(
     note_id: UUID, note_in: NoteUpdate, db: DbSession
-) -> NoteResponse:
+) -> Note:
     service = NoteService(db)
     note = await service.update_note(note_id, note_in)
     if not note:
@@ -55,7 +56,7 @@ async def update_note(
 @router.patch("/{note_id}/move", response_model=NoteResponse)
 async def move_note(
     note_id: UUID, move_request: NoteMoveRequest, db: DbSession
-) -> NoteResponse:
+) -> Note:
     service = NoteService(db)
     note = await service.move_to_container(note_id, move_request.container_id)
     if not note:
@@ -66,7 +67,7 @@ async def move_note(
 @router.patch("/{note_id}/highlights", response_model=NoteResponse)
 async def update_highlights(
     note_id: UUID, highlights_in: NoteHighlightsUpdate, db: DbSession
-) -> NoteResponse:
+) -> Note:
     service = NoteService(db)
     note = await service.update_highlights(note_id, highlights_in)
     if not note:

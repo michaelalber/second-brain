@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, status
 
 from app.api.deps import DbSession
+from app.models.container import Container
 from app.schemas.container import (
     ContainerCreate,
     ContainerResponse,
@@ -18,7 +19,7 @@ router = APIRouter()
 @router.post("", response_model=ContainerResponse, status_code=status.HTTP_201_CREATED)
 async def create_container(
     container_in: ContainerCreate, db: DbSession
-) -> ContainerResponse:
+) -> Container:
     service = ContainerService(db)
     return await service.create_container(container_in)
 
@@ -30,7 +31,7 @@ async def list_containers(db: DbSession) -> list[ContainerWithCount]:
 
 
 @router.get("/{container_id}", response_model=ContainerWithNotes)
-async def get_container(container_id: UUID, db: DbSession) -> ContainerWithNotes:
+async def get_container(container_id: UUID, db: DbSession) -> Container:
     service = ContainerService(db)
     container = await service.get_container_with_notes(container_id)
     if not container:
@@ -41,7 +42,7 @@ async def get_container(container_id: UUID, db: DbSession) -> ContainerWithNotes
 @router.put("/{container_id}", response_model=ContainerResponse)
 async def update_container(
     container_id: UUID, container_in: ContainerUpdate, db: DbSession
-) -> ContainerResponse:
+) -> Container:
     service = ContainerService(db)
     container = await service.update_container(container_id, container_in)
     if not container:
@@ -50,7 +51,7 @@ async def update_container(
 
 
 @router.patch("/{container_id}/archive", response_model=ContainerResponse)
-async def archive_container(container_id: UUID, db: DbSession) -> ContainerResponse:
+async def archive_container(container_id: UUID, db: DbSession) -> Container:
     service = ContainerService(db)
     container = await service.archive_container(container_id)
     if not container:
