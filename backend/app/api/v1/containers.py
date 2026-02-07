@@ -17,9 +17,7 @@ router = APIRouter()
 
 
 @router.post("", response_model=ContainerResponse, status_code=status.HTTP_201_CREATED)
-async def create_container(
-    container_in: ContainerCreate, db: DbSession
-) -> Container:
+async def create_container(container_in: ContainerCreate, db: DbSession) -> Container:
     service = ContainerService(db)
     return await service.create_container(container_in)
 

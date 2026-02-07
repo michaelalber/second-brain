@@ -65,9 +65,7 @@ async def test_get_note_returns_note(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_get_nonexistent_note_returns_404(client: AsyncClient):
     """Get nonexistent note returns 404."""
-    response = await client.get(
-        "/api/v1/notes/00000000-0000-0000-0000-000000000000"
-    )
+    response = await client.get("/api/v1/notes/00000000-0000-0000-0000-000000000000")
 
     assert response.status_code == 404
 
@@ -194,9 +192,7 @@ async def test_update_highlights_nonexistent_note_returns_404(client: AsyncClien
 @pytest.mark.asyncio
 async def test_delete_nonexistent_note_returns_404(client: AsyncClient):
     """Delete nonexistent note returns 404."""
-    response = await client.delete(
-        "/api/v1/notes/00000000-0000-0000-0000-000000000000"
-    )
+    response = await client.delete("/api/v1/notes/00000000-0000-0000-0000-000000000000")
 
     assert response.status_code == 404
 

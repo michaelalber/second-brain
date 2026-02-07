@@ -43,9 +43,7 @@ async def get_note(note_id: UUID, db: DbSession) -> Note:
 
 
 @router.put("/{note_id}", response_model=NoteResponse)
-async def update_note(
-    note_id: UUID, note_in: NoteUpdate, db: DbSession
-) -> Note:
+async def update_note(note_id: UUID, note_in: NoteUpdate, db: DbSession) -> Note:
     service = NoteService(db)
     note = await service.update_note(note_id, note_in)
     if not note:

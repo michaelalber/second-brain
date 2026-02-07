@@ -32,7 +32,9 @@ async def test_get_container_returns_none_when_not_found(container_service, mock
 
 
 @pytest.mark.asyncio
-async def test_get_container_with_notes_returns_none_when_not_found(container_service, mock_db):
+async def test_get_container_with_notes_returns_none_when_not_found(
+    container_service, mock_db
+):
     """get_container_with_notes returns None when container doesn't exist."""
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = None
@@ -80,7 +82,9 @@ async def test_update_container_applies_changes(container_service, mock_db):
 
 
 @pytest.mark.asyncio
-async def test_archive_container_returns_none_when_not_found(container_service, mock_db):
+async def test_archive_container_returns_none_when_not_found(
+    container_service, mock_db
+):
     """archive_container returns None when container doesn't exist."""
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = None
@@ -112,7 +116,9 @@ async def test_archive_container_sets_archive_type(container_service, mock_db):
 
 
 @pytest.mark.asyncio
-async def test_delete_container_returns_false_when_not_found(container_service, mock_db):
+async def test_delete_container_returns_false_when_not_found(
+    container_service, mock_db
+):
     """delete_container returns False when container doesn't exist."""
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = None
