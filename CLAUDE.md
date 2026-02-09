@@ -40,6 +40,26 @@ Personal knowledge management system implementing Tiago Forte's BASB methodology
 - Keep route handlers under 15 lines - delegate to services
 - One Pydantic schema per use case (CreateNote, UpdateNote, NoteResponse)
 
+### YAGNI (You Aren't Gonna Need It)
+- No abstract interfaces until needed
+- No dependency injection containers
+- No plugin architecture
+- Only apply abstractions after Rule of Three (3+ consumers)
+- Add complexity only when justified by current requirements
+
+### Security by Design (OWASP)
+- Validate all inputs at system boundaries
+- Use parameterized queries for all database operations
+- Never trust client-side validation alone
+- Sanitize filenames (remove path traversal, special chars)
+- Follow OWASP guidelines for file handling, auth, and data protection
+
+### Quality Gates
+- **Cyclomatic Complexity**: Methods <10, classes <20
+- **Code Coverage**: 80% minimum for business logic (backend), 70% (frontend)
+- **Maintainability Index**: Target 70+
+- **Code Duplication**: Maximum 3%
+
 ## Directory Structure
 
 ```
@@ -79,6 +99,9 @@ cd backend
 source .venv/bin/activate
 pytest -v --tb=short                    # Run tests
 pytest --cov=app --cov-report=term-missing  # With coverage
+ruff check app/ tests/                  # Lint
+mypy app/                               # Type checking
+bandit -r app/ -c pyproject.toml        # Security scan
 uvicorn app.main:app --reload           # Dev server (port 8000)
 alembic revision --autogenerate -m "msg"  # Create migration
 alembic upgrade head                    # Apply migrations
