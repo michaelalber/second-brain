@@ -1,8 +1,7 @@
 import uuid
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.models.note import CodeStage, Note
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class NoteFactory:

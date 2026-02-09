@@ -1,7 +1,7 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
+import pytest
 from app.models.container import Container, ContainerType
 from app.schemas.container import ContainerUpdate
 from app.services.container_service import ContainerService

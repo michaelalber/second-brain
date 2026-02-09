@@ -3,10 +3,10 @@ from app.models.note import CodeStage, Note
 from app.models.tag import Tag, note_tags
 
 __all__ = [
+    "CodeStage",
     "Container",
     "ContainerType",
     "Note",
-    "CodeStage",
     "Tag",
     "note_tags",
 ]

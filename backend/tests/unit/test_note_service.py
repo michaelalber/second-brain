@@ -1,9 +1,9 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
+import pytest
 from app.models.note import CodeStage, Note
-from app.schemas.note import NoteUpdate, NoteHighlightsUpdate, HighlightRange
+from app.schemas.note import HighlightRange, NoteHighlightsUpdate, NoteUpdate
 from app.services.note_service import NoteService
 
 

@@ -62,3 +62,7 @@ dist/
 # Database
 *.db
 *.db-journal
+
+# Project data
+logs/
+uv.lock

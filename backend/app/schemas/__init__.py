@@ -1,3 +1,10 @@
+from app.schemas.container import (
+    ContainerCreate,
+    ContainerResponse,
+    ContainerUpdate,
+    ContainerWithCount,
+    ContainerWithNotes,
+)
 from app.schemas.note import (
     HighlightRange,
     NoteCreate,
@@ -5,13 +12,6 @@ from app.schemas.note import (
     NoteMoveRequest,
     NoteResponse,
     NoteUpdate,
-)
-from app.schemas.container import (
-    ContainerCreate,
-    ContainerResponse,
-    ContainerUpdate,
-    ContainerWithCount,
-    ContainerWithNotes,
 )
 
 __all__ = [
