@@ -2,46 +2,66 @@
 
 A personal knowledge management system implementing Tiago Forte's "Building a Second Brain" methodology.
 
-## Core Concepts
+## Features
 
-- **PARA**: Organizational taxonomy - Projects, Areas, Resources, Archives
-- **CODE**: Workflow stages - Capture, Organize, Distill, Express
-- **Progressive Summarization**: Multi-layer highlighting (L1→L4)
+- **PARA Organization** - Projects, Areas, Resources, Archives taxonomy
+- **CODE Workflow** - Capture, Organize, Distill, Express stages
+- **Progressive Summarization** - Multi-layer highlighting (L1 raw text → L4 executive summary)
+- **Quick Capture** - Fast note capture to inbox
+- **Rich Editor** - Tiptap-based editor with highlighting support
+- **Full-Text Search** - Search across all notes and containers
+- **Keyboard Shortcuts** - Fast navigation and note management
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
 | Backend | FastAPI, SQLAlchemy 2.0 (async), Pydantic v2, Alembic |
-| Frontend | Vue 3 (Composition API), Pinia, Vue Router 4, TailwindCSS |
+| Frontend | Vue 3 (Composition API), Pinia, Vue Router 4, TailwindCSS, Tiptap |
 | Database | SQLite (dev), PostgreSQL (prod) |
 | Testing | pytest + pytest-asyncio, Vitest |
+| Linting | ruff, mypy, bandit |
 
-## Quick Start
-
-### Prerequisites
+## Prerequisites
 
 - Python 3.10+
 - Node.js 18+
+
+## Installation
 
 ### Backend
 
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
 alembic upgrade head
-uvicorn app.main:app --reload
 ```
-
-Backend runs at http://localhost:8000
 
 ### Frontend
 
 ```bash
 cd frontend
 npm install
+```
+
+## Usage
+
+### Start Backend
+
+```bash
+cd backend
+source .venv/bin/activate
+uvicorn app.main:app --reload
+```
+
+Backend runs at http://localhost:8000 (API docs at http://localhost:8000/docs)
+
+### Start Frontend
+
+```bash
+cd frontend
 npm run dev
 ```
 
@@ -74,7 +94,7 @@ second-brain/
 
 ### Notes
 - `POST /api/v1/notes` - Quick capture to inbox
-- `GET /api/v1/notes` - List with filters
+- `GET /api/v1/notes` - List with filters (`container_id`, `stage`, `q`)
 - `GET /api/v1/notes/{id}` - Get single note
 - `PUT /api/v1/notes/{id}` - Update note
 - `PATCH /api/v1/notes/{id}/move` - Move to container
@@ -94,6 +114,20 @@ second-brain/
 - `GET /api/v1/search?q=` - Full-text search
 - `GET /api/v1/recent` - Recently modified
 
+## Configuration
+
+Configuration via environment variables or `.env` file:
+
+```env
+# Database
+DATABASE_URL=sqlite+aiosqlite:///./basb.db  # Dev (default)
+# DATABASE_URL=postgresql+asyncpg://user:pass@localhost/basb  # Prod
+
+# Server
+HOST=0.0.0.0
+PORT=8000
+```
+
 ## Development
 
 ### Running Tests
@@ -102,19 +136,53 @@ second-brain/
 # Backend
 cd backend
 source .venv/bin/activate
-pytest -v --cov=app
+pytest                                      # All tests
+pytest -v --cov=app --cov-report=term-missing  # With coverage
 
 # Frontend
 cd frontend
 npm run test
+npm run test -- --watch                     # Watch mode
 ```
 
-### Code Style
+### Code Quality
 
-- Backend: async/await, type hints, layered architecture
-- Frontend: Composition API with `<script setup>`, TypeScript
+```bash
+# Lint
+ruff check app/ tests/
+
+# Type check
+mypy app/
+
+# Security scan
+bandit -r app/ -c pyproject.toml
+```
+
+## Security
+
+- Input validation on all API boundaries
+- Parameterized queries via SQLAlchemy (no raw SQL)
+- Pydantic schema validation for all request/response payloads
+- CORS configuration for local development
+
+## Troubleshooting
+
+**Database Migration Errors:**
+- Ensure migrations are up to date: `alembic upgrade head`
+- For a fresh start: delete `basb.db` and re-run migrations
+
+**Frontend API Errors:**
+- Verify backend is running on port 8000
+- Check browser console for CORS issues
+
+**Test Failures:**
+- Ensure you're in the virtual environment: `source .venv/bin/activate`
+- Tests use in-memory SQLite, no external deps needed
+
+## Contributing
+
+This is a personal/educational project, but suggestions and feedback are welcome via issues.
 
 ## License
 
-MIT
-
+MIT License - see [LICENSE](LICENSE) for details.
