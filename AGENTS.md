@@ -3,65 +3,149 @@
 ## Build/Lint/Test Commands
 
 ### Backend
-- **Run all tests**: `pytest` (colorized output)
-- **Run single test**: `pytest -k <test_name>`
-- **Test coverage**: `pytest --cov=app --cov-report=term-missing`
-- **Type check**: `mypy app` (ensure Pydantic models are type-checked)
-- **Format code**: `black app` (for Python files)
-- **Lint**: `flake8 app` (check for style violations)
+```bash
+# Run all tests
+pytest
+
+# Run single test
+pytest -k <test_name>
+
+# Test coverage
+pytest --cov=app --cov-report=term-missing
+
+# Lint
+ruff check app/ tests/
+
+# Type check
+mypy app/
+
+# Security scan
+bandit -r app/ -c pyproject.toml
+```
 
 ### Frontend
-- **Run all tests**: `npm run test`
-- **Run single test**: `npm run test -- --grep <test_name>`
-- **Format code**: `prettier --write "src/**/*.ts" "src/**/*.vue"`
-- **Lint**: `eslint --ext .ts,.vue src` (check for style violations)
-- **Build**: `npm run build` (production build)
+```bash
+# Run all tests
+npm run test
+
+# Run single test
+npm run test -- --grep <test_name>
+
+# Lint
+npm run lint
+
+# Build
+npm run build
+```
 
 ## Code Style Guidelines
 
 ### Python (Backend)
-- **Imports**: Group standard library, third-party, and local imports. Use absolute imports.
-- **Formatting**: Follow [Black](https://black.readthedocs.io/) style (4 spaces, no trailing spaces)
-- **Types**: Use Pydantic models for request/response schemas. Annotate all function signatures.
-- **Naming**: Use `snake_case` for variables, `PascalCase` for classes. Constants in `UPPER_SNAKE_CASE`.
-- **Error Handling**: Use specific exceptions. Prefer `try/except` blocks with clear error messages. Log errors using `logging`.
-- **Async**: Use `async/await` for I/O operations. Never mix sync and async code.
+
+**Imports:**
+- Follow standard Python import ordering (stdlib, third-party, local)
+- Separate groups with blank lines
+- Prefer absolute imports
+
+**Formatting:**
+- Follow PEP 8 style guidelines
+- Use Ruff for linting, formatting, and import sorting
+- 4-space indentation
+
+**Types:**
+- Type hints on all function parameters and return types
+- Use Pydantic models for all request/response schemas
+- Use `Mapped[]` for SQLAlchemy 2.0 column definitions
+- Use dataclasses for simple data containers
+
+**Naming:**
+- `snake_case` for variables/functions
+- `PascalCase` for classes
+- `UPPER_CASE` for constants
+
+**Error Handling:**
+- Use specific exception types, never bare `except:`
+- Use `raise RuntimeError(...)` instead of bare `assert` for runtime checks (bandit S101)
+- Provide helpful error messages
+- Log errors using `logging`
+
+**Documentation:**
+- Google-style docstrings for all public functions and classes
+- Include parameter descriptions with types
+- Include return value descriptions
+
+**Async:**
+- Use `async/await` throughout - no sync database calls
+- Services layer for business logic, routes stay thin
+
+**Testing:**
+- Arrange-Act-Assert pattern
+- Use fixtures for test data setup
+- Test business logic and edge cases
+- Use `@pytest.mark.asyncio` for async tests
 
 ### TypeScript (Frontend)
-- **Imports**: Use relative paths. Group imports by type (e.g., components, utilities, styles).
-- **Formatting**: Follow [Prettier](https://prettier.io/) style (2 spaces, semi-colons)
-- **Types**: Define prop/emit types explicitly. Use TypeScript interfaces for component props.
-- **Naming**: Use `camelCase` for variables, `PascalCase` for components. Constants in `UPPER_SNAKE_CASE`.
-- **Error Handling**: Use `try/catch` blocks. Use `console.error()` for debugging.
-- **Composition API**: Use `<script setup>` only. Define reusable logic in composables.
 
-## Additional Rules
+**Imports:**
+- Use relative paths
+- Group imports by type (components, utilities, styles)
 
-### Cursor Rules
-- If `.cursor/rules/` exists, follow its formatting and style guidelines.
-- Ensure all code changes pass `cursor lint` and `cursor format`.
+**Formatting:**
+- Follow Prettier style (2 spaces, semi-colons)
 
-### Copilot Rules
-- If `.github/copilot-instructions.md` exists, follow its instructions for AI-assisted coding.
-- Disable Copilot for sensitive files (e.g., `.env`, `secrets.ts`)
+**Types:**
+- Define prop/emit types explicitly
+- Use TypeScript interfaces for component props
 
-## TDD Requirements
-- **RED**: Write failing tests first (use `@pytest.mark.asyncio` for async tests)
-- **GREEN**: Minimal code to make tests pass
-- **REFACTOR**: Improve code structure while keeping tests green
-- **Coverage**: Aim for 80%+ backend, 70%+ frontend
+**Naming:**
+- `camelCase` for variables
+- `PascalCase` for components
+- `UPPER_SNAKE_CASE` for constants
 
-## Security
-- **Never commit secrets**: Use environment variables or vaults for sensitive data
-- **Input validation**: Sanitize all user inputs to prevent injection attacks
-- **Permissions**: Use least privilege principles for file system and database access
+**Composition API:**
+- Use `<script setup lang="ts">` only
+- Pinia stores: actions async, getters for derived state
+- Define reusable logic in composables
 
-## Git
-- **Commit messages**: Use `feat|fix|test|refactor: brief description`
-- **Branching**: Use feature branches for new functionality. Merge with `--no-ff` to preserve history
-- **Pull requests**: Include 1-3 bullet points summarizing changes. Reference related issues
+## Development Principles
+
+### TDD
+1. **Never write production code without a failing test first**
+2. Cycle: RED (write failing test) → GREEN (minimal code to pass) → REFACTOR
+3. Run tests before committing: `pytest` (backend), `npm run test` (frontend)
+4. Coverage targets: Backend 80%+, Frontend 70%+
+
+### Security by Design (OWASP)
+- Validate all inputs at system boundaries
+- Use parameterized queries for all database operations
+- Never trust client-side validation alone
+- Sanitize filenames (remove path traversal, special chars)
+- Follow OWASP guidelines for file handling, auth, and data protection
+- Never commit secrets - use environment variables
+
+### YAGNI (You Aren't Gonna Need It)
+- No abstract interfaces until needed
+- No dependency injection containers
+- No plugin architecture
+- Only apply abstractions after Rule of Three (3+ consumers)
+- Add complexity only when justified by current requirements
+
+### Quality Gates
+- **Cyclomatic Complexity**: Methods <10, classes <20
+- **Code Coverage**: 80% minimum for business logic (backend), 70% (frontend)
+- **Maintainability Index**: Target 70+
+- **Code Duplication**: Maximum 3%
+
+## Git Workflow
+
+- Commit after each GREEN phase
+- Commit message format: `feat|fix|test|refactor: brief description`
+- Don't commit failing tests (RED phase is local only)
+- Use feature branches for new functionality
+- Pull requests: include 1-3 bullet points summarizing changes
 
 ## Tools
+
 - **Bash**: Use for running tests, linters, and formatters
 - **Read/Write/Edit**: For file operations
 - **Grep/Glob**: For code search
@@ -69,9 +153,11 @@
 - **Skill**: For TDD cycles and architecture reviews
 
 ## Example Workflow
-1. Run `pytest -k <test_name>` to identify failing tests
-2. Write minimal code to make tests pass
-3. Run linters and formatters
-4. Refactor code while keeping tests green
-5. Commit with `git commit -m "fix: <description>"`
-6. Push to remote and create PR with `gh pr create`
+
+1. Write a failing test for the new feature
+2. Run `pytest -k <test_name>` to confirm it fails (RED)
+3. Write minimal code to make the test pass (GREEN)
+4. Run full test suite: `pytest`
+5. Run linters: `ruff check app/ tests/ && mypy app/`
+6. Refactor if needed while keeping tests green (REFACTOR)
+7. Commit: `git commit -m "feat: <description>"`
