@@ -19,10 +19,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.10"
 
-      - name: Install linting tools
-        run: pip install ruff mypy
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
 
       - name: Run Ruff linter
         run: ruff check app/ tests/
@@ -30,14 +32,8 @@ jobs:
       - name: Run Ruff formatter check
         run: ruff format --check app/ tests/
 
-      - name: Install project dependencies for mypy
-        run: pip install -r requirements.txt
-
-      - name: Run mypy type checking
-        run: mypy app/ --ignore-missing-imports
-
-  pip-audit:
-    name: Dependency Audit
+  type-check:
+    name: Type Check
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -48,16 +44,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pip-audit
-          pip install -r requirements.txt
+          pip install -e ".[dev]"
 
-      - name: Run pip-audit
-        run: pip-audit
+      - name: Run mypy
+        run: mypy app/
 
   test:
     name: Test (Python ${{ matrix.python-version }})
@@ -78,20 +73,41 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
-          cache-dependency-path: backend/requirements.txt
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -e ".[dev]"
 
       - name: Run tests
         run: pytest -v --cov=app --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage to Codecov
-        if: matrix.python-version == '3.11'
+        if: matrix.python-version == '3.10'
         uses: codecov/codecov-action@v4
         with:
           files: backend/coverage.xml
           fail_ci_if_error: false
         continue-on-error: true
+
+  dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run pip-audit
+        run: pip-audit --skip-editable --desc on
