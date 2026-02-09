@@ -28,9 +28,7 @@ class ContainerService:
         return container
 
     async def get_container(self, container_id: UUID) -> Container | None:
-        result = await self.db.execute(
-            select(Container).where(Container.id == container_id)
-        )
+        result = await self.db.execute(select(Container).where(Container.id == container_id))
         return result.scalar_one_or_none()
 
     async def get_container_with_notes(self, container_id: UUID) -> Container | None:

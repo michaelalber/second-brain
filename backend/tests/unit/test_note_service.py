@@ -76,9 +76,7 @@ async def test_move_to_container_returns_none_when_not_found(note_service, mock_
 
 
 @pytest.mark.asyncio
-async def test_move_to_container_sets_capture_when_moving_to_inbox(
-    note_service, mock_db
-):
+async def test_move_to_container_sets_capture_when_moving_to_inbox(note_service, mock_db):
     """Moving to inbox (container_id=None) sets stage to capture."""
     note_id = uuid4()
     existing_note = Note(
@@ -121,9 +119,7 @@ async def test_move_to_container_sets_organize_when_from_capture(note_service, m
 
 
 @pytest.mark.asyncio
-async def test_move_to_container_preserves_stage_when_already_organized(
-    note_service, mock_db
-):
+async def test_move_to_container_preserves_stage_when_already_organized(note_service, mock_db):
     """Moving between containers preserves stage if not capture."""
     note_id = uuid4()
     new_container_id = uuid4()
@@ -151,9 +147,7 @@ async def test_update_highlights_returns_none_when_not_found(note_service, mock_
     mock_result.scalar_one_or_none.return_value = None
     mock_db.execute.return_value = mock_result
 
-    highlights = NoteHighlightsUpdate(
-        highlights=[HighlightRange(start=0, end=10, layer=2)]
-    )
+    highlights = NoteHighlightsUpdate(highlights=[HighlightRange(start=0, end=10, layer=2)])
     result = await note_service.update_highlights(uuid4(), highlights)
 
     assert result is None
@@ -173,9 +167,7 @@ async def test_update_highlights_sets_distill_stage(note_service, mock_db):
     mock_result.scalar_one_or_none.return_value = existing_note
     mock_db.execute.return_value = mock_result
 
-    highlights = NoteHighlightsUpdate(
-        highlights=[HighlightRange(start=0, end=10, layer=2)]
-    )
+    highlights = NoteHighlightsUpdate(highlights=[HighlightRange(start=0, end=10, layer=2)])
     result = await note_service.update_highlights(note_id, highlights)
 
     assert result.code_stage == CodeStage.DISTILL
@@ -196,9 +188,7 @@ async def test_update_highlights_preserves_express_stage(note_service, mock_db):
     mock_result.scalar_one_or_none.return_value = existing_note
     mock_db.execute.return_value = mock_result
 
-    highlights = NoteHighlightsUpdate(
-        highlights=[HighlightRange(start=0, end=10, layer=2)]
-    )
+    highlights = NoteHighlightsUpdate(highlights=[HighlightRange(start=0, end=10, layer=2)])
     result = await note_service.update_highlights(note_id, highlights)
 
     assert result.code_stage == CodeStage.EXPRESS

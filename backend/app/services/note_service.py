@@ -41,9 +41,7 @@ class NoteService:
         if stage:
             query = query.where(Note.code_stage == stage)
         if q:
-            query = query.where(
-                Note.title.ilike(f"%{q}%") | Note.content.ilike(f"%{q}%")
-            )
+            query = query.where(Note.title.ilike(f"%{q}%") | Note.content.ilike(f"%{q}%"))
 
         query = query.order_by(Note.updated_at.desc())
         result = await self.db.execute(query)
@@ -62,9 +60,7 @@ class NoteService:
         await self.db.refresh(note)
         return note
 
-    async def move_to_container(
-        self, note_id: UUID, container_id: UUID | None
-    ) -> Note | None:
+    async def move_to_container(self, note_id: UUID, container_id: UUID | None) -> Note | None:
         note = await self.get_note(note_id)
         if not note:
             return None
@@ -90,9 +86,7 @@ class NoteService:
         if not note:
             return None
 
-        note.highlights = {
-            "highlights": [h.model_dump() for h in highlights_in.highlights]
-        }
+        note.highlights = {"highlights": [h.model_dump() for h in highlights_in.highlights]}
 
         if note.code_stage in (CodeStage.CAPTURE, CodeStage.ORGANIZE):
             note.code_stage = CodeStage.DISTILL

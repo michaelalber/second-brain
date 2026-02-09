@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import DateTime, ForeignKey, String, Text, func
 from sqlalchemy.dialects.sqlite import JSON
@@ -31,7 +31,7 @@ class Note(Base):
     title: Mapped[str] = mapped_column(String(500))
     content: Mapped[str] = mapped_column(Text)
     content_html: Mapped[str | None] = mapped_column(Text, nullable=True)
-    highlights: Mapped[dict] = mapped_column(JSON, default=dict)
+    highlights: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     executive_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_url: Mapped[str | None] = mapped_column(String(2000), nullable=True)
     source_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
@@ -39,20 +39,12 @@ class Note(Base):
         ForeignKey("containers.id"), nullable=True
     )
     code_stage: Mapped[CodeStage] = mapped_column(default=CodeStage.CAPTURE)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=func.now(), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=func.now(), onupdate=func.now(), nullable=False
     )
-    captured_at: Mapped[datetime] = mapped_column(
-        DateTime, default=func.now(), nullable=False
-    )
+    captured_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), nullable=False)
 
     # Relationships
-    container: Mapped[Container | None] = relationship(
-        "Container", back_populates="notes"
-    )
-    tags: Mapped[list[Tag]] = relationship(
-        "Tag", secondary=note_tags, back_populates="notes"
-    )
+    container: Mapped[Container | None] = relationship("Container", back_populates="notes")
+    tags: Mapped[list[Tag]] = relationship("Tag", secondary=note_tags, back_populates="notes")

@@ -26,11 +26,7 @@ class Tag(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(100), unique=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=func.now(), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), nullable=False)
 
     # Relationships
-    notes: Mapped[list[Note]] = relationship(
-        "Note", secondary=note_tags, back_populates="tags"
-    )
+    notes: Mapped[list[Note]] = relationship("Note", secondary=note_tags, back_populates="tags")

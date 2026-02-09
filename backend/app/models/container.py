@@ -28,15 +28,11 @@ class Container(Base):
     name: Mapped[str] = mapped_column(String(255))
     type: Mapped[ContainerType]
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    parent_id: Mapped[uuid.UUID | None] = mapped_column(
-        ForeignKey("containers.id"), nullable=True
-    )
+    parent_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("containers.id"), nullable=True)
     is_active: Mapped[bool] = mapped_column(default=True)
     deadline: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     status: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=func.now(), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=func.now(), onupdate=func.now(), nullable=False
     )
@@ -45,7 +41,5 @@ class Container(Base):
     parent: Mapped[Container | None] = relationship(
         "Container", remote_side=[id], back_populates="children"
     )
-    children: Mapped[list[Container]] = relationship(
-        "Container", back_populates="parent"
-    )
+    children: Mapped[list[Container]] = relationship("Container", back_populates="parent")
     notes: Mapped[list[Note]] = relationship("Note", back_populates="container")

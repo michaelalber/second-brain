@@ -52,9 +52,7 @@ async def update_note(note_id: UUID, note_in: NoteUpdate, db: DbSession) -> Note
 
 
 @router.patch("/{note_id}/move", response_model=NoteResponse)
-async def move_note(
-    note_id: UUID, move_request: NoteMoveRequest, db: DbSession
-) -> Note:
+async def move_note(note_id: UUID, move_request: NoteMoveRequest, db: DbSession) -> Note:
     service = NoteService(db)
     note = await service.move_to_container(note_id, move_request.container_id)
     if not note:

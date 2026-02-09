@@ -29,7 +29,5 @@ class SearchService:
 
     async def get_recent(self, limit: int = 20) -> list[Note]:
         """Get recently modified notes."""
-        result = await self.db.execute(
-            select(Note).order_by(Note.updated_at.desc()).limit(limit)
-        )
+        result = await self.db.execute(select(Note).order_by(Note.updated_at.desc()).limit(limit))
         return list(result.scalars().all())

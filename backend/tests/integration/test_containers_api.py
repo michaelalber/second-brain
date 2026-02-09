@@ -103,9 +103,7 @@ async def test_get_container_with_notes(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_get_nonexistent_container_returns_404(client: AsyncClient):
     """Get nonexistent container returns 404."""
-    response = await client.get(
-        "/api/v1/containers/00000000-0000-0000-0000-000000000000"
-    )
+    response = await client.get("/api/v1/containers/00000000-0000-0000-0000-000000000000")
 
     assert response.status_code == 404
 
@@ -176,9 +174,7 @@ async def test_update_nonexistent_container_returns_404(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_archive_nonexistent_container_returns_404(client: AsyncClient):
     """Archive nonexistent container returns 404."""
-    response = await client.patch(
-        "/api/v1/containers/00000000-0000-0000-0000-000000000000/archive"
-    )
+    response = await client.patch("/api/v1/containers/00000000-0000-0000-0000-000000000000/archive")
 
     assert response.status_code == 404
 
@@ -186,8 +182,6 @@ async def test_archive_nonexistent_container_returns_404(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_delete_nonexistent_container_returns_404(client: AsyncClient):
     """Delete nonexistent container returns 404."""
-    response = await client.delete(
-        "/api/v1/containers/00000000-0000-0000-0000-000000000000"
-    )
+    response = await client.delete("/api/v1/containers/00000000-0000-0000-0000-000000000000")
 
     assert response.status_code == 404

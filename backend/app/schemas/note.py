@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -45,7 +46,7 @@ class NoteResponse(NoteBase):
 
     id: UUID
     content_html: str | None = None
-    highlights: dict = {}
+    highlights: dict[str, Any] = {}
     executive_summary: str | None = None
     container_id: UUID | None = None
     code_stage: CodeStage
