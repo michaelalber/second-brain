@@ -115,20 +115,20 @@ npm run build
 3. Run tests before committing: `pytest` (backend), `npm run test` (frontend)
 4. Coverage targets: Backend 80%+, Frontend 70%+
 
-### Security by Design (OWASP)
-- Validate all inputs at system boundaries
-- Use parameterized queries for all database operations
+### Security-By-Design
+- Validate all inputs at system boundaries via Pydantic schemas
+- Use parameterized queries — SQLAlchemy ORM prevents SQL injection by default
 - Never trust client-side validation alone
-- Sanitize filenames (remove path traversal, special chars)
-- Follow OWASP guidelines for file handling, auth, and data protection
-- Never commit secrets - use environment variables
+- Sanitize user-provided content (rich text editor output) before storage
+- Lock CORS to specific origins with explicit methods and headers
+- Never include secrets in source code — use environment variables
 
 ### YAGNI (You Aren't Gonna Need It)
-- No abstract interfaces until needed
+- Start with direct implementations
+- Add abstractions only when complexity demands it
+- Create interfaces only when multiple implementations exist
 - No dependency injection containers
 - No plugin architecture
-- Only apply abstractions after Rule of Three (3+ consumers)
-- Add complexity only when justified by current requirements
 
 ### Quality Gates
 - **Cyclomatic Complexity**: Methods <10, classes <20

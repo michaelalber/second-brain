@@ -41,18 +41,19 @@ Personal knowledge management system implementing Tiago Forte's BASB methodology
 - One Pydantic schema per use case (CreateNote, UpdateNote, NoteResponse)
 
 ### YAGNI (You Aren't Gonna Need It)
-- No abstract interfaces until needed
+- Start with direct implementations
+- Add abstractions only when complexity demands it
+- Create interfaces only when multiple implementations exist
 - No dependency injection containers
 - No plugin architecture
-- Only apply abstractions after Rule of Three (3+ consumers)
-- Add complexity only when justified by current requirements
 
-### Security by Design (OWASP)
-- Validate all inputs at system boundaries
-- Use parameterized queries for all database operations
+### Security-By-Design
+- Validate all inputs at system boundaries via Pydantic schemas
+- Use parameterized queries — SQLAlchemy ORM prevents SQL injection by default
 - Never trust client-side validation alone
-- Sanitize filenames (remove path traversal, special chars)
-- Follow OWASP guidelines for file handling, auth, and data protection
+- Sanitize user-provided content (rich text editor output) before storage
+- Lock CORS to specific origins with explicit methods and headers
+- Never include secrets in source code — use environment variables
 
 ### Quality Gates
 - **Cyclomatic Complexity**: Methods <10, classes <20
