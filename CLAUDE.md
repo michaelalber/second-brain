@@ -54,6 +54,7 @@ Personal knowledge management system implementing Tiago Forte's BASB methodology
 - Sanitize user-provided content (rich text editor output) before storage
 - Lock CORS to specific origins with explicit methods and headers
 - Never include secrets in source code — use environment variables
+- All rules align with [OWASP Top 10 (2025)](https://owasp.org/Top10/2025/) guidance
 
 ### Quality Gates
 - **Cyclomatic Complexity**: Methods <10, classes <20

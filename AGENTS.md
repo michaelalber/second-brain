@@ -122,6 +122,7 @@ npm run build
 - Sanitize user-provided content (rich text editor output) before storage
 - Lock CORS to specific origins with explicit methods and headers
 - Never include secrets in source code — use environment variables
+- All rules align with [OWASP Top 10 (2025)](https://owasp.org/Top10/2025/) guidance
 
 ### YAGNI (You Aren't Gonna Need It)
 - Start with direct implementations
