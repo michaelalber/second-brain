@@ -38,6 +38,8 @@ dmypy.json
 # IDE
 .idea/
 .vscode/
+.claude/
+.opencode/
 
 # OS
 .DS_Store
