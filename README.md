@@ -33,10 +33,8 @@ A personal knowledge management system implementing Tiago Forte's "Building a Se
 
 ```bash
 cd backend
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-pip install -e ".[dev]"
-alembic upgrade head
+python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
+.venv/bin/alembic upgrade head
 ```
 
 ### Frontend
@@ -52,8 +50,7 @@ npm install
 
 ```bash
 cd backend
-source .venv/bin/activate
-uvicorn app.main:app --reload
+.venv/bin/uvicorn app.main:app --reload
 ```
 
 Backend runs at http://localhost:8000 (API docs at http://localhost:8000/docs)
@@ -135,9 +132,8 @@ PORT=8000
 ```bash
 # Backend
 cd backend
-source .venv/bin/activate
-pytest                                      # All tests
-pytest -v --cov=app --cov-report=term-missing  # With coverage
+.venv/bin/pytest                                      # All tests
+.venv/bin/pytest -v --cov=app --cov-report=term-missing  # With coverage
 
 # Frontend
 cd frontend
@@ -149,16 +145,24 @@ npm run test -- --watch                     # Watch mode
 
 ```bash
 cd backend
-source .venv/bin/activate
+
+# Formatting check (apply formatting by removing --check)
+.venv/bin/ruff format --check app/ tests/
 
 # Lint
-ruff check app/ tests/
+.venv/bin/ruff check app/ tests/
 
 # Type check
-mypy app/
+.venv/bin/mypy app/
 
 # Security scan
-bandit -r app/ -c pyproject.toml
+.venv/bin/bandit -r app/ -c pyproject.toml
+```
+
+Run all checks at once:
+
+```bash
+.venv/bin/pytest && .venv/bin/ruff format --check app/ tests/ && .venv/bin/ruff check app/ tests/ && .venv/bin/mypy app/ && .venv/bin/bandit -r app/ -c pyproject.toml
 ```
 
 ## Security
@@ -179,7 +183,7 @@ bandit -r app/ -c pyproject.toml
 - Check browser console for CORS issues
 
 **Test Failures:**
-- Ensure you're in the virtual environment: `source .venv/bin/activate`
+- Ensure you're using the venv: prefix commands with `.venv/bin/` (e.g., `.venv/bin/pytest`)
 - Tests use in-memory SQLite, no external deps needed
 
 ## Contributing
