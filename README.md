@@ -148,6 +148,9 @@ npm run test -- --watch                     # Watch mode
 ### Code Quality
 
 ```bash
+cd backend
+source .venv/bin/activate
+
 # Lint
 ruff check app/ tests/
 
