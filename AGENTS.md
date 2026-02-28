@@ -1,4 +1,7 @@
-# AGENTS.md
+# AGENTS.md — second-brain
+
+> Global rules (TDD, security, quality gates, Python/AI standards, AI behavior) are in
+> `~/.config/opencode/AGENTS.md` and apply here automatically.
 
 ## Build/Lint/Test Commands
 
@@ -107,35 +110,12 @@ npm run build
 - Pinia stores: actions async, getters for derived state
 - Define reusable logic in composables
 
-## Development Principles
+## Project-Specific Security
 
-### TDD
-1. **Never write production code without a failing test first**
-2. Cycle: RED (write failing test) → GREEN (minimal code to pass) → REFACTOR
-3. Run tests before committing: `pytest` (backend), `npm run test` (frontend)
-4. Coverage targets: Backend 80%+, Frontend 70%+
-
-### Security-By-Design
-- Validate all inputs at system boundaries via Pydantic schemas
-- Use parameterized queries — SQLAlchemy ORM prevents SQL injection by default
-- Never trust client-side validation alone
+In addition to global security rules:
 - Sanitize user-provided content (rich text editor output) before storage
 - Lock CORS to specific origins with explicit methods and headers
-- Never include secrets in source code — use environment variables
-- All rules align with [OWASP Top 10 (2025)](https://owasp.org/Top10/2025/) guidance
-
-### YAGNI (You Aren't Gonna Need It)
-- Start with direct implementations
-- Add abstractions only when complexity demands it
-- Create interfaces only when multiple implementations exist
-- No dependency injection containers
-- No plugin architecture
-
-### Quality Gates
-- **Cyclomatic Complexity**: Methods <10, classes <20
-- **Code Coverage**: 80% minimum for business logic (backend), 70% (frontend)
-- **Maintainability Index**: Target 70+
-- **Code Duplication**: Maximum 3%
+- Frontend coverage target: 70% minimum (backend follows global 80%)
 
 ## Git Workflow
 
