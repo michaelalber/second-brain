@@ -1,5 +1,9 @@
 # CLAUDE.md - BASB (Building a Second Brain) Application
 
+> Global rules (TDD, security, quality gates, Python/TypeScript standards, AI behavior, YAGNI,
+> git hygiene, grounded-code-mcp) are defined in `~/.claude/CLAUDE.md` and apply here automatically.
+> Rules below are project-specific overrides and additions only.
+
 ## Project Overview
 
 Personal knowledge management system implementing Tiago Forte's BASB methodology:
@@ -12,55 +16,30 @@ Personal knowledge management system implementing Tiago Forte's BASB methodology
 **Backend:** FastAPI, SQLAlchemy 2.0 (async), Pydantic v2, Alembic, SQLite/PostgreSQL
 **Frontend:** Vue 3 (Composition API + `<script setup>`), Pinia, Vue Router 4, TailwindCSS, Tiptap, Vite, TypeScript
 
-## Critical Rules
+## Architecture
 
-### TDD is Mandatory
-1. **Never write production code without a failing test first**
-2. Cycle: RED (write failing test) → GREEN (minimal code to pass) → REFACTOR
-3. Run tests before committing: `pytest` (backend), `npm run test` (frontend)
-4. Coverage targets: Backend 80%+, Frontend 70%+
-
-### Code Style
-
-**Python (Backend):**
-- Use `async/await` throughout - no sync database calls
-- Type hints required on all function signatures
-- Pydantic models for all request/response schemas
-- Services layer for business logic, routes stay thin
+- Backend uses layered architecture: routes → services → repositories (not vertical slice)
+- Keep route handlers under 15 lines — delegate to services
+- One Pydantic schema per use case (CreateNote, UpdateNote, NoteResponse)
 - Use `Mapped[]` for SQLAlchemy 2.0 column definitions
 
-**TypeScript (Frontend):**
+## Coverage Targets
+
+- Backend: 80% (matches global)
+- Frontend: **70%** minimum (project-specific lower threshold for UI components)
+
+## Vue / Pinia Conventions
+
 - Composition API with `<script setup lang="ts">` only
 - Define prop/emit types explicitly
 - Pinia stores: actions async, getters for derived state
 - Composables for reusable logic
 
-### Architecture Patterns
-- Backend: Layered (routes → services → repositories)
-- Keep route handlers under 15 lines - delegate to services
-- One Pydantic schema per use case (CreateNote, UpdateNote, NoteResponse)
+## Project-Specific Security
 
-### YAGNI (You Aren't Gonna Need It)
-- Start with direct implementations
-- Add abstractions only when complexity demands it
-- Create interfaces only when multiple implementations exist
-- No dependency injection containers
-- No plugin architecture
-
-### Security-By-Design
-- Validate all inputs at system boundaries via Pydantic schemas
-- Use parameterized queries — SQLAlchemy ORM prevents SQL injection by default
-- Never trust client-side validation alone
+In addition to global security rules:
 - Sanitize user-provided content (rich text editor output) before storage
 - Lock CORS to specific origins with explicit methods and headers
-- Never include secrets in source code — use environment variables
-- All rules align with [OWASP Top 10 (2025)](https://owasp.org/Top10/2025/) guidance
-
-### Quality Gates
-- **Cyclomatic Complexity**: Methods <10, classes <20
-- **Code Coverage**: 80% minimum for business logic (backend), 70% (frontend)
-- **Maintainability Index**: Target 70+
-- **Code Duplication**: Maximum 3%
 
 ## Directory Structure
 
@@ -178,12 +157,6 @@ it('moves note updates stage to organize', async () => {
   expect(store.notes[0].code_stage).toBe('organize')
 })
 ```
-
-## Git Workflow
-
-- Commit after each GREEN phase
-- Commit message format: `feat|fix|test|refactor: brief description`
-- Don't commit failing tests (RED phase is local only)
 
 ## When Stuck
 

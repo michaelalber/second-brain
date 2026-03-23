@@ -82,7 +82,6 @@ npm run build
 - Services layer for business logic, routes stay thin
 
 **Testing:**
-- Arrange-Act-Assert pattern
 - Use fixtures for test data setup
 - Test business logic and edge cases
 - Use `@pytest.mark.asyncio` for async tests
