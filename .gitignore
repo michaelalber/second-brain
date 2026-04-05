@@ -68,3 +68,5 @@ dist/
 # Project data
 logs/
 uv.lock
+thoughts/shared/progress/
+thoughts/shared/sessions/
