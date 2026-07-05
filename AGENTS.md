@@ -3,6 +3,21 @@
 > Global rules (TDD, security, quality gates, Python/AI standards, AI behavior) are in
 > `~/.config/opencode/AGENTS.md` and apply here automatically.
 
+## Architecture
+
+- **Vertical Slice Architecture (VSA) for new features** — each feature is self-contained under
+  `app/features/<feature>/` (router, schemas, service, models, its own migration, co-located tests),
+  wired into `main.py` by one explicit `include_router`. No plugin/auto-discovery.
+- **Shared kernel stays central** — `main.py`, `database.py`, `config.py`, and cross-cutting models
+  (`Note`, `Container`, `Tag`) are shared; features *reference* them (FKs, PARA scoping) but do not
+  *own* them.
+- **Legacy migrates opportunistically** — existing layered modules (notes/containers/tags:
+  routes → services) stay as-is until substantially touched, then lift into a slice (boy-scout /
+  rule of three). No big-bang reorg.
+- **Database: PostgreSQL + pgvector everywhere** (dev = test = prod), introduced by the in-progress
+  `rag-document-chat` feature; tests use a session-scoped **Testcontainers** Postgres+pgvector, not
+  in-memory SQLite (legacy modules stay on SQLite until that feature's first slice lands).
+
 ## Build/Lint/Test Commands
 
 ### Backend
@@ -85,6 +100,8 @@ npm run build
 - Use fixtures for test data setup
 - Test business logic and edge cases
 - Use `@pytest.mark.asyncio` for async tests
+- Vector/RAG feature tests run on a **Postgres+pgvector Testcontainers** base (not in-memory SQLite);
+  co-locate slice tests under `app/features/<feature>/tests/`
 
 ### TypeScript (Frontend)
 

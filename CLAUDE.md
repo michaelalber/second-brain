@@ -18,7 +18,17 @@ Personal knowledge management system implementing Tiago Forte's BASB methodology
 
 ## Architecture
 
-- Backend uses layered architecture: routes → services → repositories (not vertical slice)
+- **Vertical Slice Architecture (VSA) for new features** — each feature is a self-contained
+  module under `app/features/<feature>/` owning its full stack (`router.py`, `schemas.py`,
+  `service.py`, feature-specific models, its own Alembic migration, and co-located `tests/`).
+- **Shared kernel stays central** — the app factory (`main.py`), async engine/session
+  (`database.py`), `config.py` Settings, and cross-cutting models (`Note`, `Container`, `Tag`)
+  are shared. Features *reference* these (e.g. FK `note_id`, PARA scoping) but do not *own* them.
+- **Integration is explicit** — each feature exposes a router that `main.py` includes via
+  `include_router`. No plugin/auto-discovery mechanism (YAGNI).
+- **Legacy migrates opportunistically, never big-bang** — existing layered modules
+  (notes/containers/tags: routes → services) stay as-is until substantially touched, then are
+  lifted into a slice as an atomic, tested commit (boy-scout rule / rule of three).
 - Keep route handlers under 15 lines — delegate to services
 - One Pydantic schema per use case (CreateNote, UpdateNote, NoteResponse)
 - Use `Mapped[]` for SQLAlchemy 2.0 column definitions
@@ -47,17 +57,20 @@ In addition to global security rules:
 basb/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py           # App factory, middleware
-│   │   ├── config.py         # Pydantic Settings
-│   │   ├── database.py       # Async engine + session
-│   │   ├── models/           # SQLAlchemy models
-│   │   ├── schemas/          # Pydantic schemas
-│   │   ├── api/v1/           # Route handlers
-│   │   └── services/         # Business logic
+│   │   ├── main.py           # App factory, middleware, include_router per feature
+│   │   ├── config.py         # Pydantic Settings          ┐
+│   │   ├── database.py       # Async engine + session     │ shared kernel
+│   │   ├── models/           # Cross-cutting models        │ (Note, Container, Tag)
+│   │   ├── schemas/          # Shared Pydantic schemas     ┘
+│   │   ├── api/v1/           # Legacy layered routes (migrate opportunistically)
+│   │   ├── services/         # Legacy layered services (migrate opportunistically)
+│   │   └── features/         # NEW: VSA feature slices
+│   │       └── <feature>/    #   router.py, schemas.py, service.py, models.py,
+│   │                         #   alembic/, tests/  (owns its full stack)
 │   ├── tests/
-│   │   ├── conftest.py       # Fixtures
+│   │   ├── conftest.py       # Shared fixtures
 │   │   ├── factories/        # Test data factories
-│   │   ├── unit/
+│   │   ├── unit/             # Legacy-module tests (slice tests co-locate in features/)
 │   │   └── integration/
 │   └── alembic/
 ├── frontend/
@@ -98,9 +111,17 @@ npm run lint                            # ESLint
 
 ## Database
 
-- Dev: SQLite at `backend/basb.db`
-- Test: In-memory SQLite (`:memory:`)
-- Prod: PostgreSQL (swap driver in DATABASE_URL)
+**Target: PostgreSQL + pgvector everywhere** (dev = test = prod) — introduced by the
+`rag-document-chat` feature (in progress). The note `embedding` column (pgvector) has no SQLite
+equivalent, and dev/test/prod parity eliminates dialect drift (feature spec, decisions 4 & 10).
+
+- **Dev:** PostgreSQL + pgvector via Docker Compose.
+- **Test:** session-scoped **Testcontainers** Postgres + pgvector with **per-test transaction
+  rollback** — the in-memory SQLite fixture is retired.
+- **Prod:** PostgreSQL + pgvector.
+
+> **Transitional:** until `rag-document-chat`'s first slice lands, legacy modules still run on SQLite
+> (`backend/basb.db`, in-memory `:memory:` tests). New feature slices use Postgres+pgvector now.
 
 ## API Design
 
@@ -157,6 +178,10 @@ it('moves note updates stage to organize', async () => {
   expect(store.notes[0].code_stage).toBe('organize')
 })
 ```
+
+**Vector / RAG tests** (`rag-document-chat` and later slices) run on the **Postgres+pgvector
+Testcontainers** base (decision 10), not in-memory SQLite — the shared `Note` table's `Vector`/JSONB
+columns cannot build on SQLite. **Co-locate slice tests** under `app/features/<feature>/tests/`.
 
 ## When Stuck
 
